@@ -116,7 +116,7 @@ class BookController extends Controller
         }
     }
 
-    public function review(Request $request, Book $book)
+    public function review(Request $request, $bookId)
     {
         $this->validate($request, [
             'name' => 'required|string',
@@ -125,6 +125,7 @@ class BookController extends Controller
         ]);
 
         try{            
+            $book = Book::where('id', $bookId)->firstOrFail();
             $review = new Review;
             $review->fill($request->all());
             $review->book_id = $book->id;

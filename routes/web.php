@@ -16,4 +16,4 @@ Route::get('/', function () {
 })->name('home');
 
 Route::resource('books', 'BookController');
-Route::post('books/review/{book}', 'BookController@review')->name('books.review');
+Route::post('books/review/{bookId}', 'BookController@review')->name('books.review');
