@@ -8,7 +8,7 @@
         <div class="card">
             <div class="card-header">{{ __('Edit Book') }}</div>
             <div class="card-body">
-                <form method="POST" action="{{ route('books.update', $book) }}">
+                <form method="POST" action="{{ route('books.update', $book) }}" enctype="multipart/form-data">
                     @method('PATCH')
                     @csrf                                
                     <div class="form-group row">
@@ -54,7 +54,25 @@
                             </span>
                             @endif
                         </div>
-                    </div>                    
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-md-4 col-form-label text-md-right">{{ __('Cover') }}</label>
+                        <div class="col-md-6">
+                            <img src="{{$book->cover_url}}" height="300px" width="300px" class="mx-auto rounded d-block">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group row">
+                        <label class="col-md-4 col-form-label text-md-right">{{ __('Upload New Cover') }}</label>
+                        <div class="col-md-6">
+                            <input id="cover" type="file" name="cover">
+                            @if ($errors->has('cover'))
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $errors->first('cover') }}</strong>
+                            </span>
+                            @endif
+                        </div>
+                    </div>
                     <div class="form-group row mb-0">
                         <div class="col-md-6 offset-md-4">
                             <button type="submit" class="btn btn-primary">

@@ -5,16 +5,31 @@ namespace App\Http\Controllers;
 use App\Book;
 use App\Review;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use MicrosoftAzure\Storage\Blob\BlobRestProxy;
+use MicrosoftAzure\Storage\Common\Exceptions\ServiceException;
+use MicrosoftAzure\Storage\Blob\Models\ListBlobsOptions;
+use MicrosoftAzure\Storage\Blob\Models\CreateContainerOptions;
+use MicrosoftAzure\Storage\Blob\Models\PublicAccessType;
 
 class BookController extends Controller
 {
+    function generateRandomString($length = 6) {
+        $characters = 'abcdefghijklmnopqrstuvwxyz';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {
+    {        
         $listBook = Book::all();
         return view('books.index', compact('listBook'));
     }
@@ -27,7 +42,7 @@ class BookController extends Controller
     public function create()
     {
         return view('books.create');
-    }
+    }    
 
     /**
      * Store a newly created resource in storage.
@@ -42,11 +57,47 @@ class BookController extends Controller
             'description' => 'required|string',            
             'author' => 'required|string',
             'release_year' => 'required|integer',
-            // 'image_name' => 'required|date|after:awal_pendaftaran',            
+            'cover' => 'required|mimes:jpeg,bmp,png'
         ]);
+           
+        
 
-        try{                  
-            Book::create($request->all());
+        // // Create container options object.
+        // $createContainerOptions = new CreateContainerOptions();
+
+        // // Set public access policy.
+        // $createContainerOptions->setPublicAccess(PublicAccessType::CONTAINER_AND_BLOBS);
+
+        // // Set container metadata.
+        // $createContainerOptions->addMetaData("key1", "value1");
+        // $createContainerOptions->addMetaData("key2", "value2");
+
+        // Create container.
+            // Only for first time
+            // $blobClient->createContainer($containerName, $createContainerOptions);            
+
+        
+
+        try {
+            $connectionString = "DefaultEndpointsProtocol=https;AccountName=".env('AZURE_STORAGE_ACCOUNT_NAME').";AccountKey=".env('AZURE_STORAGE_ACCOUNT_KEY');
+
+            // Create blob client.
+            $blobClient = BlobRestProxy::createBlobService($connectionString);
+            $containerName = env('AZURE_STORAGE_CONTAINER');            
+                    
+            $uploadedFile = $request->cover;
+            $fileContent = fopen($uploadedFile, "r");
+            $fileName = $uploadedFile->getClientOriginalName();
+            $fileNameWOExtension = pathinfo($fileName, PATHINFO_FILENAME);
+            $fileUniqueName = $fileNameWOExtension.'-'.now().'.'.$uploadedFile->getClientOriginalExtension();            
+    
+            // Upload blob
+            $blobClient->createBlockBlob($containerName, $fileUniqueName, $fileContent);
+                
+            $book = new Book;
+            $book->fill($request->all());
+            $book->cover_url = env('AZURE_BASE_URL').'/'.env('AZURE_STORAGE_CONTAINER').'/'.$fileUniqueName;
+            $book->save();            
             return redirect()->route('books.index')->with('success', 'Book added');
         }catch (\Exception $e) {
             return redirect()->route('books.index')->with('error', $e->getMessage());            
@@ -89,11 +140,34 @@ class BookController extends Controller
             'description' => 'required|string',            
             'author' => 'required|string',
             'release_year' => 'required|integer',
-            // 'image_name' => 'required|date|after:awal_pendaftaran',            
+            'cover' => 'mimes:jpeg,bmp,png'
         ]);
 
-        try{            
-            $book->update($request->all());
+        try {                                            
+            if($request->hasFile('cover')){
+                $connectionString = "DefaultEndpointsProtocol=https;AccountName=".env('AZURE_STORAGE_ACCOUNT_NAME').";AccountKey=".env('AZURE_STORAGE_ACCOUNT_KEY');
+
+                // Create blob client.
+                $blobClient = BlobRestProxy::createBlobService($connectionString);
+                $containerName = env('AZURE_STORAGE_CONTAINER');
+                $uploadedFile = $request->cover;
+                $fileContent = fopen($uploadedFile, "r");
+                $fileName = $uploadedFile->getClientOriginalName();
+                $fileNameWOExtension = pathinfo($fileName, PATHINFO_FILENAME);
+                $fileUniqueName = $fileNameWOExtension.'-'.now().'.'.$uploadedFile->getClientOriginalExtension();
+                
+                // Delete old blob
+                $oldBlobName = str_replace(env('AZURE_BASE_URL').'/'.env('AZURE_STORAGE_CONTAINER').'/', '', $book->cover_url);
+                $blobClient->deleteBlob($containerName, $oldBlobName);
+
+                // Upload updated blob
+                $blobClient->createBlockBlob($containerName, $fileUniqueName, $fileContent);
+                $book->cover_url = env('AZURE_BASE_URL').'/'.env('AZURE_STORAGE_CONTAINER').'/'.$fileUniqueName;
+
+            }               
+            $book->fill($request->all());
+            
+            $book->save();            
             return redirect()->route('books.index')->with('success', 'Book updated');
         }catch (\Exception $e) {
             return redirect()->route('books.index')->with('error', $e->getMessage());            
@@ -109,6 +183,11 @@ class BookController extends Controller
     public function destroy(Book $book)
     {
         try{            
+            $connectionString = "DefaultEndpointsProtocol=https;AccountName=".env('AZURE_STORAGE_ACCOUNT_NAME').";AccountKey=".env('AZURE_STORAGE_ACCOUNT_KEY');
+            // Create blob client.
+            $blobClient = BlobRestProxy::createBlobService($connectionString);
+            $oldBlobName = str_replace(env('AZURE_BASE_URL').'/'.env('AZURE_STORAGE_CONTAINER').'/', '', $book->cover_url);
+            $blobClient->deleteBlob(env('AZURE_STORAGE_CONTAINER'), $oldBlobName);
             $book->delete();
             return redirect()->route('books.index')->with('success', 'Book deleted');
         }catch (\Exception $e) {

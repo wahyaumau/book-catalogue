@@ -15,7 +15,7 @@
 	</div>
 @endif
     <div class="card mb-3">
-        <img src="https://imagesvc.meredithcorp.io/v3/mm/image?url=https%3A%2F%2Fstatic.onecms.io%2Fwp-content%2Fuploads%2Fsites%2F6%2F2016%2F09%2Fhpsorcstone.jpg" height="300px" width="300px" class="mx-auto rounded d-block">
+        <img src="{{$book->cover_url}}" height="300px" width="300px" class="mx-auto rounded d-block">
         <div class="card-body">
             <h5 class="card-title">{{ $book->title }}</h5>                
             <p class="card-text"> {{$book->description}}</p>
