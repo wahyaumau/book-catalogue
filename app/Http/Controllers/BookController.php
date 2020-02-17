@@ -11,6 +11,7 @@ use MicrosoftAzure\Storage\Common\Exceptions\ServiceException;
 use MicrosoftAzure\Storage\Blob\Models\ListBlobsOptions;
 use MicrosoftAzure\Storage\Blob\Models\CreateContainerOptions;
 use MicrosoftAzure\Storage\Blob\Models\PublicAccessType;
+use BenjaminHirsch\Azure\Search\Service;
 
 class BookController extends Controller
 {
@@ -89,7 +90,7 @@ class BookController extends Controller
                 
             $book = new Book;
             $book->fill($request->all());
-            $book->cover_url = env('AZURE_BASE_URL').'/'.env('AZURE_STORAGE_CONTAINER').'/'.$fileUniqueName;
+            $book->cover_url = env('AZURE_STORAGE_BASE_URL').'/'.env('AZURE_STORAGE_CONTAINER').'/'.$fileUniqueName;
             $book->save();            
             return redirect()->route('books.index')->with('success', 'Book added');
         }catch (\Exception $e) {
@@ -103,8 +104,9 @@ class BookController extends Controller
      * @param  \App\Book  $book
      * @return \Illuminate\Http\Response
      */
-    public function show(Book $book)
+    public function show($id)
     {
+        $book = Book::findOrFail($id);
         return view('books.show', compact('book'));
     }
 
@@ -114,8 +116,9 @@ class BookController extends Controller
      * @param  \App\Book  $book
      * @return \Illuminate\Http\Response
      */
-    public function edit(Book $book)
+    public function edit($id)
     {
+        $book = Book::findOrFail($id);
         return view('books.edit', compact('book'));
     }
 
@@ -126,7 +129,7 @@ class BookController extends Controller
      * @param  \App\Book  $book
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Book $book)
+    public function update(Request $request, $id)
     {
         $this->validate($request, [
             'title' => 'required|string',
@@ -136,7 +139,8 @@ class BookController extends Controller
             'cover' => 'mimes:jpeg,bmp,png'
         ]);
 
-        try {                                            
+        try {     
+            $book = Book::findOrFail($id);                                       
             if($request->hasFile('cover')){                
                 $blobClient = $this->createBlobClient();
 
@@ -146,12 +150,12 @@ class BookController extends Controller
                 $fileUniqueName = $this->generateUniqueFileName($uploadedFile);
                 
                 // Delete old blob
-                $oldBlobName = str_replace(env('AZURE_BASE_URL').'/'.env('AZURE_STORAGE_CONTAINER').'/', '', $book->cover_url);
+                $oldBlobName = str_replace(env('AZURE_STORAGE_BASE_URL').'/'.env('AZURE_STORAGE_CONTAINER').'/', '', $book->cover_url);
                 $blobClient->deleteBlob($containerName, $oldBlobName);
 
                 // Upload updated blob
                 $blobClient->createBlockBlob($containerName, $fileUniqueName, $fileContent);
-                $book->cover_url = env('AZURE_BASE_URL').'/'.env('AZURE_STORAGE_CONTAINER').'/'.$fileUniqueName;
+                $book->cover_url = env('AZURE_STORAGE_BASE_URL').'/'.env('AZURE_STORAGE_CONTAINER').'/'.$fileUniqueName;
             }               
             $book->fill($request->all());
             
@@ -168,11 +172,12 @@ class BookController extends Controller
      * @param  \App\Book  $book
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Book $book)
+    public function destroy($id)
     {
-        try{                        
+        try{
+            $book = Book::findOrFail($id);
             $blobClient = $this->createBlobClient();
-            $oldBlobName = str_replace(env('AZURE_BASE_URL').'/'.env('AZURE_STORAGE_CONTAINER').'/', '', $book->cover_url);
+            $oldBlobName = str_replace(env('AZURE_STORAGE_BASE_URL').'/'.env('AZURE_STORAGE_CONTAINER').'/', '', $book->cover_url);
             $blobClient->deleteBlob(env('AZURE_STORAGE_CONTAINER'), $oldBlobName);
             $book->delete();
             return redirect()->route('books.index')->with('success', 'Book deleted');
@@ -181,7 +186,7 @@ class BookController extends Controller
         }
     }
 
-    public function review(Request $request, $bookId)
+    public function review(Request $request, $id)
     {
         $this->validate($request, [
             'name' => 'required|string',
@@ -190,7 +195,7 @@ class BookController extends Controller
         ]);
 
         try{            
-            $book = Book::where('id', $bookId)->firstOrFail();
+            $book = Book::findOrFail($id);
             $review = new Review;
             $review->fill($request->all());
             $review->book_id = $book->id;
@@ -201,5 +206,12 @@ class BookController extends Controller
         }
         
 
+    }
+
+    public function search(Request $request){
+        $azureSearch = new Service(env('AZURE_SEARCH_BASE_URL'), env('AZURE_SEARCH_ADMIN_KEY'), env('AZURE_SEARCH_API_VERSION'));
+        $result = $azureSearch->search(env('AZURE_SEARCH_INDEX'), $request->search);
+        $listBook = json_decode(json_encode($result['value']));
+        return view('books.index', compact('listBook'));
     }
 }
