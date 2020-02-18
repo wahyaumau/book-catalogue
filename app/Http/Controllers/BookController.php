@@ -6,11 +6,6 @@ use App\Book;
 use App\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use MicrosoftAzure\Storage\Blob\BlobRestProxy;
-use MicrosoftAzure\Storage\Common\Exceptions\ServiceException;
-use MicrosoftAzure\Storage\Blob\Models\ListBlobsOptions;
-use MicrosoftAzure\Storage\Blob\Models\CreateContainerOptions;
-use MicrosoftAzure\Storage\Blob\Models\PublicAccessType;
 use BenjaminHirsch\Azure\Search\Service;
 
 class BookController extends Controller
