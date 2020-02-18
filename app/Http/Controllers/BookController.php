@@ -15,31 +15,6 @@ use BenjaminHirsch\Azure\Search\Service;
 
 class BookController extends Controller
 {
-    function createBlobClient() {
-        $connectionString = "DefaultEndpointsProtocol=https;AccountName=".env('AZURE_STORAGE_ACCOUNT_NAME').";AccountKey=".env('AZURE_STORAGE_ACCOUNT_KEY');        
-        return BlobRestProxy::createBlobService($connectionString);        
-    }
-
-    function createContainer($containerName){
-        $blobClient = $this->createBlobClient();
-        // Create container options object.
-        $createContainerOptions = new CreateContainerOptions();
-
-        // Set public access policy.
-        $createContainerOptions->setPublicAccess(PublicAccessType::CONTAINER_AND_BLOBS);
-
-        // Set container metadata.
-        $createContainerOptions->addMetaData("key1", "value1");        
-
-        // Create container.            
-        $blobClient->createContainer($containerName, $createContainerOptions);            
-    }
-
-    function generateUniqueFileName($file){
-        $fileName = $file->getClientOriginalName();
-        $fileNameWOExtension = pathinfo($fileName, PATHINFO_FILENAME);
-        return $fileNameWOExtension.'-'.now().'.'.$file->getClientOriginalExtension();
-    }
     /**
      * Display a listing of the resource.
      *

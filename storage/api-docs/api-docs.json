@@ -1,0 +1,287 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Book Catalogue App OpenApi  Documentation",
+        "description": "Api Documentation for Book Catalogue App",
+        "contact": {
+            "email": "wahyaumau@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000/api",
+            "description": "API Server"
+        }
+    ],
+    "paths": {
+        "/books": {
+            "get": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Get list of book",
+                "description": "Returns list of book",
+                "operationId": "getBookList",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BookResourceResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Store new book",
+                "description": "Returns added book data",
+                "operationId": "storeBook",
+                "responses": {
+                    "201": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BookResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    }
+                }
+            }
+        },
+        "/books/{id}": {
+            "get": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Get book information",
+                "description": "Returns book data",
+                "operationId": "getBookById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Book id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Delete existing book",
+                "description": "Deletes a record and returns no content",
+                "operationId": "deleteBook",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Book id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Update existing book",
+                "description": "Returns updated book data",
+                "operationId": "updateBook",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Book id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ApiResponse": {
+                "title": "ApiResponse",
+                "description": "Api Response model",
+                "properties": {
+                    "status": {
+                        "title": "status",
+                        "description": "request status",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 200
+                    },
+                    "message": {
+                        "title": "message",
+                        "description": "request message",
+                        "type": "string",
+                        "example": "success"
+                    }
+                },
+                "type": "object",
+                "xml": {
+                    "name": "ApiResponse"
+                }
+            },
+            "Book": {
+                "title": "Book",
+                "description": "Book model",
+                "properties": {
+                    "id": {
+                        "title": "id",
+                        "description": "book id",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "title": {
+                        "title": "title",
+                        "description": "book title",
+                        "type": "string",
+                        "example": "Harry Potter"
+                    },
+                    "description": {
+                        "title": "description",
+                        "description": "book description",
+                        "type": "string",
+                        "example": "Adventure of Harry Potter"
+                    },
+                    "author": {
+                        "title": "author",
+                        "description": "book author",
+                        "type": "string",
+                        "example": "J. K. Rowling"
+                    },
+                    "cover_url": {
+                        "title": "cover_url",
+                        "description": "book cover url",
+                        "type": "string",
+                        "example": "https:storage/cover.jpg"
+                    },
+                    "release_year": {
+                        "title": "release_year",
+                        "description": "book release year",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 2004
+                    }
+                },
+                "type": "object",
+                "xml": {
+                    "name": "Book"
+                }
+            },
+            "BookResourceResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponse"
+                    },
+                    {
+                        "title": "Book Resource Response",
+                        "description": "Book Resource Response model",
+                        "properties": {
+                            "result": {
+                                "title": "result",
+                                "description": "Book resource result",
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/Book"
+                                }
+                            }
+                        },
+                        "type": "object",
+                        "xml": {
+                            "name": "BookResourceResponse"
+                        }
+                    }
+                ]
+            },
+            "BookResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ApiResponse"
+                    },
+                    {
+                        "title": "Book Response",
+                        "description": "Book Response model",
+                        "properties": {
+                            "result": {
+                                "title": "result",
+                                "description": "Book result",
+                                "$ref": "#/components/schemas/Book"
+                            }
+                        },
+                        "type": "object",
+                        "xml": {
+                            "name": "BookResponse"
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Books",
+            "description": "API Endpoints of Books"
+        }
+    ]
+}
