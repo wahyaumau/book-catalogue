@@ -26,7 +26,7 @@ class BookController extends Controller
     {
         try{
             $listBook = Book::all();
-            return $this->apiResponse(200, 'success', ['beasiswa' => $listBook]);
+            return $this->apiResponse(200, 'success', ['book' => $listBook]);
         }catch (\Exception $e) {
             return $this->apiResponse(500, $e->getMessage(), null);
         }
@@ -110,8 +110,8 @@ class BookController extends Controller
     public function show($id)
     {        
         try{            
-            $beasiswa = Beasiswa::findOrFail($id);
-            return $this->apiResponse(200, 'success', ['beasiswa' => $beasiswa]);
+            $book = Book::findOrFail($id);
+            return $this->apiResponse(200, 'success', ['book' => $book]);
         }catch (\Exception $e) {
             return $this->apiResponse(500, $e->getMessage(), null);
         }                
